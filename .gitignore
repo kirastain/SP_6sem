@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+.vs/L1/v16/Browse.VC.db
+.vs/L1/v16/Browse.VC.opendb
+.vs/L1/v16/Server/sqlite3/db.lock
