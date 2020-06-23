@@ -14,6 +14,7 @@ using namespace std;
 
 CRITICAL_SECTION cs;
 
+//дескрипторы объектов
 HANDLE hMutex;
 HANDLE hEventStop;
 HANDLE hEventStart;
@@ -28,6 +29,7 @@ vector<HANDLE> hThreads;
 
 DWORD WINAPI newThread(LPVOID lpParameter)
 {
+	//работа с созданием потока, определение сигналов, возвращение строки в консоль
 	int ID = (int)lpParameter;
 	WaitForSingleObject(hMutex, INFINITE);
 	cout << "Thread " << ID << " created" << endl;
@@ -46,7 +48,7 @@ DWORD WINAPI newThread(LPVOID lpParameter)
 
 void start()
 {
-
+	//определение объектов handle
 	hMutex = CreateMutex(NULL, FALSE, "MyMutex");
 	hEventStop = CreateEvent(NULL, TRUE, FALSE, "eventStop");
 	hEventStart = CreateEvent(NULL, TRUE, FALSE, "eventStart");
