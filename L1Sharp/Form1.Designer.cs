@@ -33,7 +33,8 @@
             this.StopButton = new System.Windows.Forms.Button();
             this.ThreadList = new System.Windows.Forms.ListBox();
             this.threadCountField = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
+            this.sendButton = new System.Windows.Forms.Button();
+            this.threadTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.threadCountField)).BeginInit();
             this.SuspendLayout();
             // 
@@ -63,26 +64,31 @@
             resources.ApplyResources(this.threadCountField, "threadCountField");
             this.threadCountField.Name = "threadCountField";
             // 
-            // label1
+            // sendButton
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.label1.Name = "label1";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
+            resources.ApplyResources(this.sendButton, "sendButton");
+            this.sendButton.Name = "sendButton";
+            this.sendButton.UseVisualStyleBackColor = true;
+            this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
+            // 
+            // threadTextBox
+            // 
+            resources.ApplyResources(this.threadTextBox, "threadTextBox");
+            this.threadTextBox.Name = "threadTextBox";
             // 
             // Form1
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Controls.Add(this.label1);
+            this.BackColor = System.Drawing.SystemColors.Desktop;
+            this.Controls.Add(this.threadTextBox);
+            this.Controls.Add(this.sendButton);
             this.Controls.Add(this.threadCountField);
             this.Controls.Add(this.ThreadList);
             this.Controls.Add(this.StopButton);
             this.Controls.Add(this.StartButton);
             this.Name = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
-            this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.threadCountField)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -95,7 +101,8 @@
         private System.Windows.Forms.Button StopButton;
         private System.Windows.Forms.ListBox ThreadList;
         private System.Windows.Forms.NumericUpDown threadCountField;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button sendButton;
+        private System.Windows.Forms.TextBox threadTextBox;
     }
 }
 

@@ -9,17 +9,22 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace L1Sharp
 {
-    public partial class Form1 : Form //генерация формы на шарпе
+    public partial class Form1 : Form
     {
         Process ChildProcess = null;
-        //EventWaitHandle - класс, позволяющий взаимодействие между потоками
         EventWaitHandle eventStop = new EventWaitHandle(false, EventResetMode.AutoReset, "eventStop");
         EventWaitHandle eventStart = new EventWaitHandle(false, EventResetMode.AutoReset, "eventStart");
         EventWaitHandle eventConfirm = new EventWaitHandle(false, EventResetMode.ManualReset, "eventConfirm");
         EventWaitHandle eventQuit = new EventWaitHandle(false, EventResetMode.AutoReset, "eventQuit");
+        EventWaitHandle eventMessageSent = new EventWaitHandle(false, EventResetMode.AutoReset, "eventMessageSent");
+
+        [DllImport("TransportDll.dll")]
+        private static extern void sendTextToMMF(string Str, int thread);
+
         int k;
 
         public Form1()
@@ -27,25 +32,25 @@ namespace L1Sharp
             InitializeComponent();
         }
 
-        private void StartButton_Click(object sender, EventArgs e) //1 - , 2 - 
+        private void StartButton_Click(object sender, EventArgs e)
         {
-            if (ChildProcess == null || ChildProcess.HasExited) //говорит об отсутствии процесса или завершении
+            if (ChildProcess == null || ChildProcess.HasExited)
             {
-                ChildProcess = Process.Start("L1\\L1.exe"); //запустить процесс с++, консоль
-                ThreadList.Items.Clear(); //очистка списка
+                ChildProcess = Process.Start("L1\\L1.exe");
+                ThreadList.Items.Clear();
                 ThreadList.Items.Add("All threads");
                 ThreadList.Items.Add("Main thread");
-                threadCountField.Enabled = true; //счетчик над кнопками
+                threadCountField.Enabled = true;
                 k = 0;
             }
             else
             {
-                for (var i = 0; i < threadCountField.Value; i++) //по заданному количестве на шкале
+                for (var i = 0; i < threadCountField.Value; i++)
                 {
-                    eventStart.Set(); //метод, уведомляющий, что событие произошло
-                    eventConfirm.WaitOne(); //ручное, ждет сигнальное событие
-                    ThreadList.Items.Add(String.Format("Thread {0}", k++)); //добавление процесса, счетчик
-                    eventConfirm.Reset(); //несигнальное, блокирование потоков
+                    eventStart.Set();
+                    eventConfirm.WaitOne();
+                    ThreadList.Items.Add(String.Format("Thread {0}", k++));
+                    eventConfirm.Reset();
                 }
             }
 
@@ -55,46 +60,50 @@ namespace L1Sharp
         {
             if (ChildProcess == null || ChildProcess.HasExited)
             {
-                //если нет процессов и консоли, то ничего не происходит на кнопку
             }
             else
             {
                 if (k == 0)
                 {
                     
-                    eventQuit.Set(); //сигнал
-                    eventConfirm.WaitOne(); //ожидание сигнала
-                    ThreadList.Items.RemoveAt(ThreadList.Items.Count - 1); //убирает два дефолтных процесса
+                    eventQuit.Set();
+                    eventConfirm.WaitOne();
                     ThreadList.Items.RemoveAt(ThreadList.Items.Count - 1);
-                    threadCountField.Enabled = false; //выключает шкалу над кнопками
+                    ThreadList.Items.RemoveAt(ThreadList.Items.Count - 1);
+                    threadCountField.Enabled = false;
                 }
-                if (ThreadList.Items.Count != 0) { //если есть потоки в списке
-                    eventStop.Set(); //остановить, сигнальное событие
-                    eventConfirm.WaitOne(); //ожидает
-                    ThreadList.Items.RemoveAt(ThreadList.Items.Count - 1); //убрать из списка
-                    k--; //счетчик --
-                    eventConfirm.Reset(); //блокирование
+                if (ThreadList.Items.Count != 0) {
+                    eventStop.Set();
+                    eventConfirm.WaitOne();
+                    ThreadList.Items.RemoveAt(ThreadList.Items.Count - 1);
+                    k--;
+                    eventConfirm.Reset();
                 }
             }
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e) //закрытие формы
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (ChildProcess != null && !ChildProcess.HasExited) //если не завершены процессы
+            if (ChildProcess != null && !ChildProcess.HasExited)
             {
-                ChildProcess.CloseMainWindow(); //закончить
+                ChildProcess.CloseMainWindow();
                 ChildProcess.Close();
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void sendButton_Click(object sender, EventArgs e)
         {
+            if (threadTextBox.Text.Length == 0)
+            {
+                return;
+            }
 
+            string sb = threadTextBox.Text;
+            int threadNum = ThreadList.SelectedIndex;
+            sendTextToMMF(sb, threadNum);
+            eventMessageSent.Set();
+            eventConfirm.WaitOne();
         }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
+             
     }
 }
