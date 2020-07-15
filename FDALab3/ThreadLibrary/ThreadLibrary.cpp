@@ -27,23 +27,26 @@ HANDLE hWriteConfirm = NULL;
 HANDLE hReadConfirm = NULL;
 
 
-CSocket* Socket;
-CSocket Server;
+HANDLE hPipe;
 extern "C"
 {
 	int _afxForceUSRDLL;
 
 	_declspec(dllexport) void _stdcall Init()
 	{
-		AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0);
-		AfxSocketInit();
+
 	}
-	_declspec(dllexport) void _stdcall Connect()
+	_declspec(dllexport) void _stdcall disconnect()
 	{
-		Socket = new CSocket;
-		Server.Listen();
-		Server.Accept(*Socket);
+		CloseHandle(hPipe);
 	}
+	_declspec(dllexport) void _stdcall connectToServer() {
+		if (WaitNamedPipe("\\\\192.168.1.23\\pipe\\MyPipe", 5000))
+		{
+			hPipe = CreateFile("\\\\192.168.1.23\\pipe\\MyPipe", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+		}
+	}
+
 	_declspec(dllexport) void _stdcall launchClient() {
 		STARTUPINFO si = { sizeof(si) };
 		PROCESS_INFORMATION pi;
@@ -53,36 +56,46 @@ extern "C"
 	}
 
 	_declspec(dllexport) void _stdcall workWithClients() {
-		AfxSocketInit();
-		Server.Create(12345);
+		hPipe = CreateNamedPipe("\\\\.\\pipe\\MyPipe",
+			PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+			1024, 1024, 0, NULL);
 	}
 
 	_declspec(dllexport) inline int _stdcall getInt() {
+		DWORD dwDone;
 		int n;
-		Socket->Receive(&n, sizeof(int));
-		return n; 
+
+		ReadFile(hPipe, &n, sizeof(int), &dwDone, NULL);
+		return n;
 	}
 
 	_declspec(dllexport) inline void _stdcall sendInt(int n) {
-		Socket->Send(&n, sizeof(int));
+
+		DWORD dwDone;
+		WriteFile(hPipe, &n, sizeof(int), &dwDone, NULL);
+		FlushFileBuffers(hPipe);
 	}
 
 	_declspec(dllexport) inline char* _stdcall getString() {
+		DWORD dwDone;
 		int n;
-		Socket->Receive(&n, sizeof(int));
+
+		ReadFile(hPipe, &n, sizeof(int), &dwDone, NULL);
 
 		char* h = new char[n];
-		Socket->Receive(h, n);
+		ReadFile(hPipe, h, n, &dwDone, NULL);
 		return h;
 	}
 
 	_declspec(dllexport) inline void _stdcall sendString(char* str) {
-		int nLength = strlen(str) + 1;
-		Socket->Send(&nLength, sizeof(int));
-		Socket->Send(str, nLength);
+		DWORD dwDone;
+		int n = strlen(str) + 1;
+		WriteFile(hPipe, &n, sizeof(n), &dwDone, NULL);
+		WriteFile(hPipe, str, n, &dwDone, NULL);
+		FlushFileBuffers(hPipe);
 	}
 
-	_declspec(dllexport) int _stdcall confirm() {
+	_declspec(dllexport) inline int _stdcall confirm() {
 		while (true) {
 			int response = getInt();
 			if (response != 0) {
@@ -90,6 +103,7 @@ extern "C"
 			}
 		}
 	}
+<<<<<<< Updated upstream
 
 	_declspec(dllexport) inline void _stdcall connectToServer() {
 		Socket = new CSocket;
@@ -100,10 +114,20 @@ extern "C"
 	_declspec(dllexport) inline void _stdcall disconnect() {
 		Socket->Close();
 		delete Socket;
+=======
+	_declspec(dllexport) inline void _stdcall Connect() {
+		ConnectNamedPipe(hPipe, NULL);
+>>>>>>> Stashed changes
 	}
 	_declspec(dllexport) inline void _stdcall serverDisconnect() {
+		DisconnectNamedPipe(hPipe);
 	}
 }
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 void Cleanup()
 {
 	CloseHandle(hRead);
