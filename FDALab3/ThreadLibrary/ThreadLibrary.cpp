@@ -103,7 +103,9 @@ extern "C"
 	}
 	_declspec(dllexport) inline void _stdcall serverDisconnect() {
 	}
-}*/
+}
+
+
 void Cleanup()
 {
 	CloseHandle(hRead);
