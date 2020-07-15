@@ -38,9 +38,9 @@
             // 
             // startButton
             // 
-            this.startButton.Location = new System.Drawing.Point(180, 87);
+            this.startButton.Location = new System.Drawing.Point(186, 85);
             this.startButton.Name = "startButton";
-            this.startButton.Size = new System.Drawing.Size(121, 32);
+            this.startButton.Size = new System.Drawing.Size(116, 24);
             this.startButton.TabIndex = 0;
             this.startButton.Text = "Start";
             this.startButton.UseVisualStyleBackColor = true;
@@ -48,9 +48,9 @@
             // 
             // stopButton
             // 
-            this.stopButton.Location = new System.Drawing.Point(314, 87);
+            this.stopButton.Location = new System.Drawing.Point(319, 85);
             this.stopButton.Name = "stopButton";
-            this.stopButton.Size = new System.Drawing.Size(121, 32);
+            this.stopButton.Size = new System.Drawing.Size(116, 24);
             this.stopButton.TabIndex = 1;
             this.stopButton.Text = "Stop";
             this.stopButton.UseVisualStyleBackColor = true;
@@ -58,9 +58,9 @@
             // 
             // messageButton
             // 
-            this.messageButton.Location = new System.Drawing.Point(180, 228);
+            this.messageButton.Location = new System.Drawing.Point(186, 229);
             this.messageButton.Name = "messageButton";
-            this.messageButton.Size = new System.Drawing.Size(255, 29);
+            this.messageButton.Size = new System.Drawing.Size(249, 30);
             this.messageButton.TabIndex = 2;
             this.messageButton.Text = "Message";
             this.messageButton.UseVisualStyleBackColor = true;
@@ -77,21 +77,20 @@
             this.threadListListBox.Name = "threadListListBox";
             this.threadListListBox.Size = new System.Drawing.Size(240, 284);
             this.threadListListBox.TabIndex = 3;
-            this.threadListListBox.SelectedIndexChanged += new System.EventHandler(this.threadListListBox_SelectedIndexChanged);
             // 
             // threadNumberTextBox
             // 
-            this.threadNumberTextBox.Location = new System.Drawing.Point(180, 42);
+            this.threadNumberTextBox.Location = new System.Drawing.Point(186, 42);
             this.threadNumberTextBox.Name = "threadNumberTextBox";
-            this.threadNumberTextBox.Size = new System.Drawing.Size(255, 26);
+            this.threadNumberTextBox.Size = new System.Drawing.Size(249, 26);
             this.threadNumberTextBox.TabIndex = 4;
             this.threadNumberTextBox.Text = "1";
             // 
             // MessageTextBox
             // 
-            this.MessageTextBox.Location = new System.Drawing.Point(180, 186);
+            this.MessageTextBox.Location = new System.Drawing.Point(186, 167);
             this.MessageTextBox.Name = "MessageTextBox";
-            this.MessageTextBox.Size = new System.Drawing.Size(255, 26);
+            this.MessageTextBox.Size = new System.Drawing.Size(249, 26);
             this.MessageTextBox.TabIndex = 5;
             this.MessageTextBox.Text = "Message";
             // 
@@ -108,7 +107,7 @@
             this.Controls.Add(this.stopButton);
             this.Controls.Add(this.startButton);
             this.Name = "Form1";
-            this.Text = "FDA lab3";
+            this.Text = "FDA Lab3";
             this.ResumeLayout(false);
             this.PerformLayout();
 

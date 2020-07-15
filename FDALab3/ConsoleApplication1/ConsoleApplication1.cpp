@@ -11,6 +11,7 @@
 #include <thread>
 #include <windows.h>
 #include <valarray>
+#include <afxsock.h>
 #pragma comment(lib, "ThreadLibrary.lib")
 
 using namespace std;
@@ -20,17 +21,15 @@ struct EventObjects {
 	int id;
 };
 
-struct Header
-{
-	int size;
-	int threadNumber;
-	int eventNumber;
-};
-
 extern "C"
 {
-	__declspec(dllimport) bool	__stdcall programConfirm();
-	__declspec(dllimport) Header __stdcall getHeader();
+	__declspec(dllimport) void __stdcall launchClient();
+	__declspec(dllimport) void __stdcall workWithClients();
+	__declspec(dllimport) inline int __stdcall getInt( );
+	__declspec(dllimport) inline char* __stdcall getString();
+	__declspec(dllimport) inline void __stdcall sendInt(int n);
+	__declspec(dllimport) inline void __stdcall Connect();
+	__declspec(dllimport) inline void __stdcall serverDisconnect();
 }
 
 UINT MyThread(LPVOID p)
@@ -44,54 +43,45 @@ UINT MyThread(LPVOID p)
 }
 
 
-void start() {
-	HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+void start1() {
 	vector <HANDLE> vEventsClose;
+
 	while (true) {
-		Header header = getHeader();
-		int evNum = header.eventNumber;
+		Connect();
+		int evNum = getInt();
 		switch (evNum) {
 		case 0: {
 
 			HANDLE handleClose = CreateEvent(NULL, false, false, NULL);
 			vEventsClose.push_back(handleClose);
 
-			EventObjects threadVar = { handleClose, vEventsClose.size()};
+			EventObjects threadVar = { handleClose, vEventsClose.size() };
 
 			AfxBeginThread(MyThread, &threadVar);
 
-			cout << "Thread " << vEventsClose.size() << " created" << endl;
+			cout << "Thread " << " created" << endl;
 			break;
 		}
 		case 1: {
-			if (vEventsClose.size() != 0) {
+			if (vEventsClose.size() > 0) {
 				SetEvent(vEventsClose.back());
 				cout << "thread " << vEventsClose.size() << " done" << endl;
 				vEventsClose.pop_back();
-				break;
 			}
-		}
-		case 2: {
-			while (!programConfirm()) {}
-			for (auto ev : vEventsClose)
-				SetEvent(ev);
-			return;
+			break;
 		}
 		case 3: {
-			DWORD dwRead;
-			char* buff = new char[header.size + 1];
-			if (!ReadFile(hIn, buff, header.size + 1, &dwRead, nullptr) || !dwRead) {
-				break;
-			}
-			buff += 0;
-			cout << "child: ";
-			cout << buff << endl;
+			//sendInt(hPipe, vEventsClose.size());
+			string message;
+			message = getString();
+			cout << message << endl;
 		}
 		}
-		programConfirm();
+		sendInt(vEventsClose.size());
+		serverDisconnect();
 	}
-}
 
+}
 int main()
 {
 	int nRetCode = 0;
@@ -110,7 +100,9 @@ int main()
 		}
 		else
 		{
-			start();
+			launchClient();
+			workWithClients();
+			start1();
 		}
 	}
 	else

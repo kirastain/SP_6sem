@@ -9,15 +9,20 @@ namespace FDALab3
     public partial class Form1 : Form
     {
         bool ChildProcess = false;
-        [DllImport("ThreadLibrary.dll")] private static extern bool programConfirm();
-        [DllImport("ThreadLibrary.dll")] private static extern bool programWaitResponse();
-        [DllImport("ThreadLibrary.dll")] private static extern bool Send(StringBuilder str, int eventNumber, int ThreadNumber = -1);
-        [DllImport("ThreadLibrary.dll")] private static extern bool Init();
+
+        [DllImport("ThreadLibrary.dll")] private static extern void Init();
+        [DllImport("ThreadLibrary.dll")] private static extern int sendInt(int n);
+        [DllImport("ThreadLibrary.dll")] private static extern int confirm();
+        [DllImport("ThreadLibrary.dll")] private static extern void sendString(string s);
+        [DllImport("ThreadLibrary.dll")] private static extern void connectToServer();
+        [DllImport("ThreadLibrary.dll")] private static extern void disconnect();
         public Form1()
         {
             InitializeComponent();
+            ChildProcess = true;
+            Init();
         }
-        public Boolean mainThreadExists()
+        public Boolean mainThreadExist()
         {
             if (!ChildProcess)
             {
@@ -28,54 +33,50 @@ namespace FDALab3
         }
         private void startButton_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < Int32.Parse(threadNumberTextBox.Text); ++i)
+            connectToServer();
+            sendInt(0);
+            int threadCount = confirm();
+            disconnect();
+            threadListListBox.Items.Clear();
+            for (int j = 0; j < threadCount; j++)
             {
-                if (mainThreadExists())
-                {
-                    Send(new StringBuilder(""), 0);
-                    programWaitResponse();
-
-                    threadListListBox.Items.Add("Thread" + threadListListBox.Items.Count.ToString());
-                }
-                else
-                {
-                    ChildProcess = true;
-                    Init();
-                    threadListListBox.Items.Add("Main thread");
-                    break;
-                }
+                threadListListBox.Items.Add("Thread " + j);
             }
         }
 
         private void stopButton_Click(object sender, EventArgs e)
         {
-            if (!mainThreadExists())
+            if (threadListListBox.Items.Count == 1)
                 return;
+            connectToServer();
+            sendInt(1);
 
-            Send(new StringBuilder(""), 1);
-            programWaitResponse();
-
-            threadListListBox.Items.RemoveAt(threadListListBox.Items.Count - 1);
+            int threadCount = confirm();
+            disconnect();
+            threadListListBox.Items.Clear();
+            for (int j = 0; j < threadCount; j++)
+            {
+                threadListListBox.Items.Add("Thread " + j);
+            }
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!mainThreadExists())
-                return;
-
-            Send(new StringBuilder(""), 2);
-            programWaitResponse();
         }
 
         private void messageButton_Click(object sender, EventArgs e)
         {
+            connectToServer();
+            sendInt(3);
             string message = MessageTextBox.Text;
-            Send(new StringBuilder(message), 3);
-            programWaitResponse();
-        }
-
-        private void threadListListBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
+            sendString(message);
+            
+            int threadCount = confirm();
+            disconnect();
+            threadListListBox.Items.Clear();
+            for (int j = 0; j < threadCount; j++)
+            {
+                threadListListBox.Items.Add("Thread " + j);
+            }
         }
     }
 }

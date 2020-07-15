@@ -4,15 +4,16 @@
 #include "pch.h"
 #include "framework.h"
 #include "ThreadLibrary.h"
+#include <afxsock.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#include <thread>
 
 struct Header
 {
 	int size;
-	int threadNumber;
 	int eventNumber;
 };
 
@@ -26,80 +27,99 @@ HANDLE hWriteConfirm = NULL;
 HANDLE hReadConfirm = NULL;
 
 
+
+HANDLE hPipe;
 extern "C"
 {
 	int _afxForceUSRDLL;
 
-	__declspec(dllexport) 
-		bool __stdcall programConfirm()
+	_declspec(dllexport) void _stdcall Init()
 	{
-		HANDLE hh = GetStdHandle(STD_ERROR_HANDLE);
-		DWORD dwWrite;
-		WriteFile(hh, "1", strlen("1"), &dwWrite, nullptr);
-		return true;
+		
 	}
-
-	__declspec(dllexport)
-		bool __stdcall programWaitResponse()
+	_declspec(dllexport) void _stdcall disconnect()
 	{
-		const int MAXLEN = 1024;
-		while (true) {
-			DWORD dwRead;
-			char buff[MAXLEN + 1];
-			if (ReadFile(hReadConfirm, buff, MAXLEN, &dwRead, nullptr)) {
-				break;
-			}
+		CloseHandle(hPipe);
+	}
+	_declspec(dllexport) void _stdcall connectToServer() {
+		if (WaitNamedPipe("\\\\10.0.1.2\\pipe\\MyPipe", 5000))
+		{
+			hPipe = CreateFile("\\\\10.0.1.2\\pipe\\MyPipe", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 		}
-		return true;
 	}
 
-	_declspec(dllexport)
-		void _stdcall Send(const char* pStr, const int eventNumber, const int threadNumber = -1)
-	{
-		DWORD dwWrite;
-		Header header;
-		header.size = string(pStr).length() + 1;
-		header.eventNumber = eventNumber;
-		header.threadNumber = threadNumber;
-		WriteFile(hWrite, &header, SIZE_HEADER, &dwWrite, nullptr);
-		WriteFile(hWrite, pStr, strlen(pStr), &dwWrite, nullptr);
-	}
-
-	_declspec(dllexport)
-		void  _stdcall Init()
-	{
-		SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
-		CreatePipe(&hRead, &hWrite, &sa, 0);
-		CreatePipe(&hReadConfirm, &hWriteConfirm, &sa, 0);
-		SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, 0);
-
-		STARTUPINFO si = { 0 };
-		si.cb = sizeof(si);
-		si.dwFlags = STARTF_USESTDHANDLES;
-		si.hStdInput = hRead;
-		si.hStdError = hWriteConfirm;
-
+	_declspec(dllexport) void _stdcall launchClient() {
+		STARTUPINFO si = { sizeof(si) };
 		PROCESS_INFORMATION pi;
-
-		CreateProcess(NULL, (LPSTR)"ConsoleApplication1.exe", &sa, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+		CreateProcess(NULL, (LPSTR)"FDA Lab3.exe", NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
 	}
 
-	_declspec(dllexport) Header _stdcall getHeader()
-	{
-		Header header;
-		HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
-		const int MAXLEN = SIZE_HEADER;
-		char buff[MAXLEN];
+	_declspec(dllexport) void _stdcall workWithClients() {
+		hPipe = CreateNamedPipe("\\\\.\\pipe\\MyPipe",
+			PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+			1024, 1024, 0, NULL);
+	}
+
+
+	_declspec(dllexport) inline int _stdcall getInt() {
+		DWORD dwDone;
+		int n;
+
+		ReadFile(hPipe, &n, sizeof(int), &dwDone, NULL);
+		return n;
+	}
+
+	_declspec(dllexport) inline char* _stdcall getString() {
+		DWORD dwDone;
+		int n;
+
+		ReadFile(hPipe, &n, sizeof(int), &dwDone, NULL);
+
+		char* h = new char[n];
+		ReadFile(hPipe, h, n, &dwDone, NULL);
+		return h;
+	}
+
+	_declspec(dllexport) inline void _stdcall sendInt(int n) {
+
+		DWORD dwDone;
+		WriteFile(hPipe, &n, sizeof(int), &dwDone, NULL);
+		FlushFileBuffers(hPipe);
+	}
+
+	_declspec(dllexport) inline void _stdcall sendString(char* str) {
+		DWORD dwDone;
+		int n = strlen(str) + 1;
+		WriteFile(hPipe, &n, sizeof(n), &dwDone, NULL);
+		WriteFile(hPipe, str, n, &dwDone, NULL);
+		FlushFileBuffers(hPipe);  
+	}
+
+	_declspec(dllexport) inline int _stdcall confirm() {
 		while (true) {
-			DWORD dwRead;
-			if (ReadFile(hIn, buff, MAXLEN, &dwRead, nullptr)) {
-				break;
+			int response = getInt();
+			if (response != 0) {
+				return response;
 			}
 		}
-		memcpy(&header, buff, SIZE_HEADER);
-		return header;
+	}
+	_declspec(dllexport) inline void _stdcall Connect() {
+		ConnectNamedPipe(hPipe, NULL);
+	}
+	_declspec(dllexport) inline void _stdcall serverDisconnect() {
+		DisconnectNamedPipe(hPipe);
 	}
 }
+
+
+
+
+
+
+
+
 
 void Cleanup()
 {
